@@ -19,9 +19,8 @@ public enum MapError: Error {
     case modelToDictFail    // model转字典失败
 }
 
-public class Mapper {
-    /// 字典转模型
-    public class func mapFromDict<T: Mappable>(_ dict: [String: Any], _ type: T.Type) throws -> T {
+public class Mapper<T: Mappable> {
+    public class func mapFromDict(_ dict: [String: Any]) throws -> T {
         guard let jsonString = dict.toJSONString() else {
             print(MapError.dictToJsonFail)
             throw MapError.dictToJsonFail
@@ -34,7 +33,7 @@ public class Mapper {
         
         do {
             let decoder = JSONDecoder()
-            var obj = try decoder.decode(type, from: jsonData)
+            var obj = try decoder.decode(T.self, from: jsonData)
             let mirro = Mirror(reflecting: obj)
             if mirro.displayStyle == Mirror.DisplayStyle.struct {
                 obj.structMapFinished()
@@ -49,8 +48,7 @@ public class Mapper {
         }
     }
     
-    /// json转模型
-    public class func mapFromJSON<T: Mappable>(_ jsonString: String, _ type: T.Type) throws -> T {
+    public class func mapFromJSON(_ jsonString: String) throws -> T {
         guard let jsonData = jsonString.data(using: .utf8) else {
             print(MapError.jsonToDataFail)
             throw MapError.jsonToDataFail
@@ -58,7 +56,7 @@ public class Mapper {
         
         do {
             let decoder = JSONDecoder()
-            var obj = try decoder.decode(type, from: jsonData)
+            var obj = try decoder.decode(T.self, from: jsonData)
             let mirro = Mirror(reflecting: obj)
             if mirro.displayStyle == Mirror.DisplayStyle.struct {
                 obj.structMapFinished()
@@ -70,6 +68,37 @@ public class Mapper {
         } catch {
             print("mapFromJSON failed: " + error.localizedDescription)
             throw MapError.jsonToModelFail
+        }
+    }
+
+    public class func mapFromJSONObject(_ jsonObject: Any) throws -> T {
+        if let jsonString = jsonObject as? String {
+            do {
+                let obj = try mapFromJSON(jsonString)
+                return obj
+            } catch let error {
+                throw error
+            }
+        } else if let dict = jsonObject as? [String: Any] {
+            do {
+                let obj = try mapFromDict(dict)
+                return obj
+            } catch let error {
+                throw error
+            }
+        }
+
+        throw MapError.jsonToModelFail
+    }
+
+    /// 数组转模型
+    public class func mapFromArray(_ array: [Any]) throws -> [T] {
+        do {
+            let objs = try array.map([T].self)
+            return objs
+        } catch let error {
+            print("mapFromArray failed: " + error.localizedDescription)
+            throw error
         }
     }
 }

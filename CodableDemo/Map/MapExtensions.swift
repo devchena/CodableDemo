@@ -21,7 +21,7 @@ extension Array {
         return nil
     }
     
-    public func mapFromJSON<T: Decodable>(_ type: [T].Type) throws -> Array<T> {
+    public func map<T: Decodable>(_ type: [T].Type) throws -> Array<T> {
         guard let jsonString = toJSONString() else {
             print(MapError.arrayToJsonFail)
             throw MapError.arrayToJsonFail

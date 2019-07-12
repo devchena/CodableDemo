@@ -17,10 +17,16 @@ struct GuideModel: Mappable {
     var text_number = ""
 
     struct GuideTextModel: Mappable {
-        var line1 = ""
+        var line = ""
         var button1 : String?
         var button2 : String?
         var button3 : String?
+
+        enum CodingKeys: String, CodingKey {
+            case line = "line1"
+            case button1 = "button1"
+
+        }
     }
 }
 
@@ -73,32 +79,42 @@ class ViewController: UIViewController {
             "text_number":"4"
         ]
     ]
-    
+
+    lazy var page: Int? = {
+        print("进入懒加载了")
+        return dict["page"] as? Int
+    }()
+
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
         print(Date())
         
-        if let model = try? Mapper.mapFromDict(dict, GuideModel.self) {
+        if let model = try? Mapper<GuideModel>.mapFromDict(dict) {
             print("model.amount:" + model.amount)
             print("model.toDict:" + String(describing: model.toDict()))
             print("model.toJSONString:" + String(describing: model.toJSONString()))
         }
         
-//        print("dict.toJSONString:\(String(describing: dict.toJSONString()))")
-//
-//        if let jsonString = dict.toJSONString() {
-//            if let model = try? Mapper.mapFromJSON(jsonString, GuideModel.self) {
-//                print(model)
-//            }
-//        }
-//
-        if let models = try? dicts.mapFromJSON([GuideModel].self) {
-            print("models:\(models)")
+        print("dict.toJSONString:\(String(describing: dict.toJSONString()))")
+
+        if let jsonString = dict.toJSONString() {
+            if let model = try? Mapper<GuideModel>.mapFromJSON(jsonString) {
+                print(model)
+
+                print("page1: \(page)")
+            }
         }
-//
-//        print(Date())
+
+        if let models = try? dicts.map([GuideModel].self) {
+            print("models:\(models)")
+
+            print("page2: \(page)")
+
+        }
+
+        print(Date())
 }
 
     override func didReceiveMemoryWarning() {
